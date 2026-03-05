@@ -7,13 +7,19 @@ const path = require("path");
 
 const cors = require("cors");
 const app = express();
-
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // local development
+      "https://booking-hotel1-9snz.vercel.app" // your deployed frontend
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Expose the uploads directory publicly
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
 app.use("/hotels/api", hotelRoutes);
 app.use("/rooms/api", roomRoutes);
 app.use("/booking/api", bookingRoutes);
