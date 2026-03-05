@@ -17,8 +17,6 @@ app.use(
   })
 );
 app.use(express.json());
-
-// Expose the uploads directory publicly
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/hotels/api", hotelRoutes);
 app.use("/rooms/api", roomRoutes);
