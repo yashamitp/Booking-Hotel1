@@ -1,6 +1,9 @@
 const hotelModel = require("../models/hotelModel");
 const express = require("express");
 const router = express.Router();
+const { requireClerkAuth } = require("../middleware/requireAuth");
+
+// ── Public Routes (no auth needed — guests can browse) ──────────────────────
 
 router.get("/", async (req, res) => {
   try {
@@ -23,7 +26,9 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+// ── Protected Routes (owner/admin must be logged in) ─────────────────────────
+
+router.post("/", requireClerkAuth, async (req, res) => {
   try {
     const hotel = await hotelModel.create(req.body);
     res.status(201).json(hotel);
@@ -33,7 +38,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireClerkAuth, async (req, res) => {
   try {
     const hotelId = await hotelModel.findById(req.params.id);
     if (hotelId) {
@@ -48,7 +53,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireClerkAuth, async (req, res) => {
   try {
     const hotel = await hotelModel.findByIdAndUpdate(req.params.id, req.body, {
       new: true,

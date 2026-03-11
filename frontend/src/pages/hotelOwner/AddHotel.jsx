@@ -7,7 +7,7 @@ import { useUser } from "@clerk/clerk-react";
 
 function AddHotel() {
   const { user } = useUser();
-  const [images, setImages] = useState([]); // Array of File objects
+  const [images, setImages] = useState([]);
   const [hotelData, setHotelData] = useState({
     name: "",
     city: "",
@@ -27,12 +27,10 @@ function AddHotel() {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       setImages((prev) => {
-        // Avoid duplicates by filename
         const existing = new Set(prev.map((f) => f.name));
         const filtered = newFiles.filter((f) => !existing.has(f.name));
         return [...prev, ...filtered].slice(0, 10); // max 10
       });
-      // Reset input so same file can be re-added if removed
       e.target.value = "";
     }
   };
@@ -84,10 +82,14 @@ function AddHotel() {
 
   return (
     <div className="absolute top-0 ml-15 mt-20 md:ml-64 w-full md:w-[calc(100%-16rem)] px-4 sm:px-8">
-      <Title title="Add Hotel" subTitle="Register a new Hotel Property" align="left" font="outfit" />
+      <Title
+        title="Add Hotel"
+        subTitle="Register a new Hotel Property"
+        align="left"
+        font="outfit"
+      />
       <div className="md:w-3/4 mx-auto w-full my-10 bg-white border border-gray-100 rounded-xl p-8 shadow-sm">
         <form onSubmit={submitHotel} className="flex flex-col gap-6">
-
           {/* ── Image Picker ── */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
@@ -111,7 +113,10 @@ function AddHotel() {
             <div className="flex flex-wrap gap-3 items-start">
               {/* Previews */}
               {images.map((img, idx) => (
-                <div key={idx} className="relative group h-24 w-24 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                <div
+                  key={idx}
+                  className="relative group h-24 w-24 rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+                >
                   <img
                     src={URL.createObjectURL(img)}
                     alt={`preview-${idx}`}
@@ -137,8 +142,14 @@ function AddHotel() {
                   htmlFor="hotel_images"
                   className="h-24 w-24 flex flex-col items-center justify-center bg-blue-50/50 border-2 border-dashed border-blue-200 rounded-lg cursor-pointer hover:bg-blue-50 transition"
                 >
-                  <img src={assets.uploadAreaIcon} alt="upload" className="w-7 opacity-60 mb-1" />
-                  <span className="text-[10px] text-blue-600 font-medium">Add Photos</span>
+                  <img
+                    src={assets.uploadArea}
+                    alt="upload"
+                    className="w-7 opacity-60 mb-1"
+                  />
+                  <span className="text-[10px] text-blue-600 font-medium">
+                    Add Photos
+                  </span>
                   <input
                     id="hotel_images"
                     type="file"
@@ -153,7 +164,8 @@ function AddHotel() {
 
             {images.length === 0 && (
               <p className="text-xs text-gray-400 mt-1">
-                First image will be used as the cover photo. Up to 10 photos allowed.
+                First image will be used as the cover photo. Up to 10 photos
+                allowed.
               </p>
             )}
           </div>
@@ -197,7 +209,9 @@ function AddHotel() {
           </div>
 
           <div className="w-full">
-            <p className="text-gray-700 font-medium text-sm mb-2">Full Address</p>
+            <p className="text-gray-700 font-medium text-sm mb-2">
+              Full Address
+            </p>
             <textarea
               required
               name="address"

@@ -4,9 +4,14 @@ const roomRoutes = require("./routes/room.route");
 const uploadRoutes = require("./routes/upload.route");
 const express = require("express");
 const path = require("path");
+const { clerkMiddleware } = require("@clerk/express");
 
 const cors = require("cors");
 const app = express();
+
+// Clerk SDK global middleware — parses & verifies the Authorization header
+// on every request so req.auth is available downstream.
+app.use(clerkMiddleware());
 app.use(
   cors({
     origin: [

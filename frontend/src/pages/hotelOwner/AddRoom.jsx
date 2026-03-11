@@ -146,7 +146,7 @@ function AddRoom() {
               ))}
               {images.length < 10 && (
                 <label htmlFor="upload_images" className="h-24 w-24 flex flex-col items-center justify-center bg-blue-50/50 border-2 border-dashed border-blue-200 rounded-lg cursor-pointer hover:bg-blue-50 transition">
-                  <img src={assets.uploadAreaIcon} alt="upload" className="w-7 opacity-60 mb-1" />
+                  <img src={assets.uploadArea} alt="upload" className="w-7 opacity-60 mb-1" />
                   <span className="text-[10px] text-blue-600 font-medium">Add Photos</span>
                   <input id="upload_images" type="file" multiple accept="image/*" hidden onChange={handleImageAdd} />
                 </label>

@@ -2,20 +2,20 @@ const bookingModel = require("../models/bookingModel");
 const roomModel = require("../models/roomModel");
 const express = require("express");
 const router = express.Router();
+const { requireClerkAuth } = require("../middleware/requireAuth");
 
-// GET all bookings (admin dashboard)
-router.get("/", async (req, res) => {
+// GET all bookings — admin only (protected)
+router.get("/", requireClerkAuth, async (req, res) => {
   try {
-    const bookings = await bookingModel.find().populate("hotel").populate("room");
+    const bookings = await bookingModel
+      .find()
+      .populate("hotel")
+      .populate("room");
     res.json(bookings);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-
-// ⚠️  IMPORTANT: specific routes MUST come before /:id to avoid Express swallowing them
-
-// Get bookings by user ID — must be before GET /:id
 router.get("/user/:userId", async (req, res) => {
   try {
     const bookings = await bookingModel
@@ -42,8 +42,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create a booking — also decrements availableRooms on the room
-router.post("/", async (req, res) => {
+// Create a booking — also decrements availableRooms on the room (protected)
+router.post("/", requireClerkAuth, async (req, res) => {
   try {
     const { room: roomId } = req.body;
 
@@ -52,7 +52,9 @@ router.post("/", async (req, res) => {
     if (!room) return res.status(404).json({ message: "Room not found" });
 
     if (room.availableRooms <= 0) {
-      return res.status(400).json({ message: "No rooms available for this listing" });
+      return res
+        .status(400)
+        .json({ message: "No rooms available for this listing" });
     }
 
     // Create the booking
@@ -71,8 +73,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update booking status — restores availability if cancelled
-router.patch("/:id/status", async (req, res) => {
+// Update booking status — restores availability if cancelled (protected)
+router.patch("/:id/status", requireClerkAuth, async (req, res) => {
   try {
     const { status } = req.body;
     const booking = await bookingModel.findById(req.params.id).populate("room");

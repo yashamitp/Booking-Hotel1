@@ -2,9 +2,8 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 require("dotenv").config();
-
-// @imagekit/nodejs v1 uses named exports
 const { default: ImageKit, toFile } = require("@imagekit/nodejs");
+const { requireClerkAuth } = require("../middleware/requireAuth");
 
 // ── ImageKit client (v1 API: only privateKey in constructor) ─────────────────
 const imagekit = new ImageKit({
@@ -15,7 +14,7 @@ const imagekit = new ImageKit({
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ── POST /upload/api ─────────────────────────────────────────────────────────
-router.post("/", upload.array("images", 10), async (req, res) => {
+router.post("/", requireClerkAuth, upload.array("images", 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res
@@ -27,7 +26,9 @@ router.post("/", upload.array("images", 10), async (req, res) => {
     // toFile() wraps a Buffer so the SDK can send it correctly
     const uploadPromises = req.files.map(async (file) => {
       const fileName = `hotel_${Date.now()}_${file.originalname.replace(/\s+/g, "_")}`;
-      const fileObj = await toFile(file.buffer, fileName, { type: file.mimetype });
+      const fileObj = await toFile(file.buffer, fileName, {
+        type: file.mimetype,
+      });
 
       return imagekit.files.upload({
         file: fileObj,

@@ -1,6 +1,9 @@
 const roomModel = require("../models/roomModel");
 const express = require("express");
 const router = express.Router();
+const { requireClerkAuth } = require("../middleware/requireAuth");
+
+// ── Public Routes ─────────────────────────────────────────────────────────────
 
 router.get("/", async (req, res) => {
   try {
@@ -21,7 +24,9 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+// ── Protected Routes ──────────────────────────────────────────────────────────
+
+router.post("/", requireClerkAuth, async (req, res) => {
   try {
     const room = await roomModel.create(req.body);
     res.status(201).json(room);
@@ -30,7 +35,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireClerkAuth, async (req, res) => {
   try {
     const room = await roomModel.findByIdAndDelete(req.params.id);
     if (!room) return res.status(404).json({ message: "Room not found" });
@@ -40,7 +45,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireClerkAuth, async (req, res) => {
   try {
     const room = await roomModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!room) return res.status(404).json({ message: "Room not found" });
