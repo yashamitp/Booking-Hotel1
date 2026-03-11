@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { assets, facilityIcons } from "../assets/assets";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import StarRating from "../components/StarRating";
 import axiosClient from "../api/axiosClient";
 
@@ -41,6 +41,13 @@ const RadioButton = ({ label, selected = false, onChange }) => {
 
 function AllRooms() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Read hero search params from URL
+  const cityFromUrl = searchParams.get("city") || "";
+  const checkInFromUrl = searchParams.get("checkIn") || "";
+  const checkOutFromUrl = searchParams.get("checkOut") || "";
+  const guestsFromUrl = searchParams.get("guests") || "";
 
   const [openFilters, setOpenFilters] = useState(false);
   const [selectedRoomTypes, setSelectedRoomTypes] = useState([]);
@@ -55,6 +62,8 @@ function AllRooms() {
     "500 to 1000",
     "1000 to 2000",
     "2000 to 3000",
+    "3000 to 5000",
+    "5000+",
   ];
 
   const sortOptions = [
@@ -98,6 +107,13 @@ function AllRooms() {
   const filteredRooms = useMemo(() => {
     let data = [...roomsData];
 
+    // Filter by city from Hero search
+    if (cityFromUrl) {
+      data = data.filter((room) =>
+        room.hotel?.city?.toLowerCase().includes(cityFromUrl.toLowerCase())
+      );
+    }
+
     // Filter by room type
     if (selectedRoomTypes.length) {
       data = data.filter((room) =>
@@ -109,6 +125,7 @@ function AllRooms() {
     if (selectedPriceRanges.length) {
       data = data.filter((room) =>
         selectedPriceRanges.some((range) => {
+          if (range === "5000+") return room.pricePerNight >= 5000;
           const [min, max] = range.split(" to ").map(Number);
           return room.pricePerNight >= min && room.pricePerNight <= max;
         })
@@ -119,17 +136,15 @@ function AllRooms() {
     if (sortBy === "price low to high") {
       data.sort((a, b) => a.pricePerNight - b.pricePerNight);
     }
-
     if (sortBy === "price high to low") {
       data.sort((a, b) => b.pricePerNight - a.pricePerNight);
     }
-
     if (sortBy === "newest first") {
       data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     return data;
-  }, [selectedRoomTypes, selectedPriceRanges, sortBy, roomsData]);
+  }, [selectedRoomTypes, selectedPriceRanges, sortBy, roomsData, cityFromUrl]);
 
   /* =======================
           UI
@@ -144,7 +159,44 @@ function AllRooms() {
           Hotel Rooms
         </h1>
 
-        {filteredRooms.length === 0 ? <p className="mt-8">No rooms found.</p> : filteredRooms.map((room) => (
+        {/* Active search summary banner */}
+        {cityFromUrl && (
+          <div className="flex items-center gap-2 mt-3 mb-1 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 w-fit">
+            <img src={assets.locationIcon} alt="" className="h-4" />
+            <span>
+              Showing rooms in <strong>{cityFromUrl}</strong>
+              {checkInFromUrl && checkOutFromUrl && (
+                <span className="ml-1 text-gray-600">
+                  · {checkInFromUrl} → {checkOutFromUrl}
+                </span>
+              )}
+              {guestsFromUrl && (
+                <span className="ml-1 text-gray-600">· {guestsFromUrl} guest{guestsFromUrl > 1 ? "s" : ""}</span>
+              )}
+            </span>
+            <button
+              className="ml-2 text-gray-400 hover:text-gray-600 transition"
+              onClick={() => navigate("/rooms")}
+              title="Clear search"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {filteredRooms.length === 0 ? (
+          <div className="mt-12 text-center text-gray-500">
+            <p className="text-lg">No rooms found{cityFromUrl ? ` in "${cityFromUrl}"` : ""}.</p>
+            {cityFromUrl && (
+              <button
+                onClick={() => navigate("/rooms")}
+                className="mt-3 text-blue-600 underline text-sm"
+              >
+                Clear search and show all
+              </button>
+            )}
+          </div>
+        ) : filteredRooms.map((room) => (
           <div
             key={room._id}
             className="flex flex-col md:flex-row gap-6 py-10 border-b"
@@ -154,7 +206,7 @@ function AllRooms() {
               alt=""
               className="md:w-1/2 rounded-xl cursor-pointer object-cover"
               onClick={() => navigate(`/rooms/${room._id}`)}
-              style={{maxHeight: '300px'}}
+              style={{ maxHeight: "300px" }}
             />
 
             <div className="md:w-1/2">
@@ -191,6 +243,13 @@ function AllRooms() {
               <p className="text-xl font-medium mt-4">
                 ₹{room.pricePerNight}/night
               </p>
+
+              <button
+                onClick={() => navigate(`/rooms/${room._id}`)}
+                className="mt-4 bg-black text-white text-sm px-5 py-2 rounded-full hover:bg-gray-800 transition"
+              >
+                Book Now
+              </button>
             </div>
           </div>
         ))}
@@ -237,7 +296,7 @@ function AllRooms() {
             ))}
           </div>
 
-          <div className="px-5 pt-5 pb-6">
+          <div className="px-5 pt-5">
             <p className="font-medium">Sort By</p>
             {sortOptions.map((option, i) => (
               <RadioButton
@@ -248,6 +307,26 @@ function AllRooms() {
               />
             ))}
           </div>
+
+          {/* Clear all filters */}
+          {(selectedRoomTypes.length > 0 || selectedPriceRanges.length > 0 || sortBy) && (
+            <div className="px-5 pt-4 pb-6">
+              <button
+                onClick={() => {
+                  setSelectedRoomTypes([]);
+                  setSelectedPriceRanges([]);
+                  setSortBy("");
+                }}
+                className="text-xs text-red-500 hover:text-red-700 transition underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+
+          {!selectedRoomTypes.length && !selectedPriceRanges.length && !sortBy && (
+            <div className="pb-4" />
+          )}
         </div>
       </div>
     </div>
