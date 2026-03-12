@@ -16,7 +16,7 @@
     cors({
       origin: [
         "http://localhost:5173", // local development
-        "https://booking-hotel1-9snz.vercel.app" // your deployed frontend
+        "https://booking-hotel1-self.vercel.app/" // your deployed frontend
       ],
       credentials: true,
     })
