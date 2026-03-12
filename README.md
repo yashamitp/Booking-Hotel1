@@ -124,7 +124,7 @@ Backend `.env`
 ```
 PORT=5000
 MONGO_URI=your_mongodb_connection
-CLERK_SECRET_KEY=your_clerk_secret
+CLERK_SECRET_KEY=your_clerk_sec ret
 IMAGEKIT_PRIVATE_KEY=your_imagekit_key
 ```
 
