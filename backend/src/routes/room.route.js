@@ -47,7 +47,9 @@ router.delete("/:id", requireClerkAuth, async (req, res) => {
 
 router.put("/:id", requireClerkAuth, async (req, res) => {
   try {
-    const room = await roomModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const room = await roomModel.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!room) return res.status(404).json({ message: "Room not found" });
     res.status(200).json(room);
   } catch (error) {
