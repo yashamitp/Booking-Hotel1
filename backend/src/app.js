@@ -24,7 +24,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", // local development
-      "https://bookhotels-git-main-yashamitps-projects.vercel.app", // your deployed frontend
+      "https://bookhotels-git-main-yashamitps-projects.vercel.app/", // your deployed frontend
     ],
     credentials: true,
   }),
