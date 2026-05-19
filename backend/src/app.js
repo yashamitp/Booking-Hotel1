@@ -9,6 +9,16 @@
   const cors = require("cors");
   const app = express();
 
+  const arr = [1, 2, 2, 2, 3, 41, 4, 5, 6, 7, 8, 9, 10];
+  function removeDuplicates(arr) {
+    const uniqueSet = new Set(arr);
+    // let strin=un
+    return Array.from(uniqueSet);
+
+  }
+  const uniqueNums = removeDuplicates(arr);
+
+
   // Clerk SDK global middleware — parses & verifies the Authorization header
   // on every request so req.auth is available downstream.
   app.use(clerkMiddleware());
