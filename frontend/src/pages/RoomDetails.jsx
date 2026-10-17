@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   assets,
   facilityIcons,
@@ -7,11 +7,14 @@ import {
 } from "../assets/assets";
 import StarRating from "../components/StarRating";
 import axiosClient from "../api/axiosClient";
-import { useUser } from "@clerk/clerk-react";
-import { useClerk } from "@clerk/clerk-react";
+import { useUser, useClerk } from "@clerk/clerk-react";
+
 function RoomDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [mainImage, setMainImage] = useState(null);
 
   // Booking form state
@@ -25,14 +28,19 @@ function RoomDetails() {
 
   useEffect(() => {
     const fetchRoomDetails = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const response = await axiosClient.get(`/rooms/api/${id}`);
         setRoom(response.data);
-        if (response.data.images && response.data.images.length > 0) {
+        if (response.data?.images && response.data.images.length > 0) {
           setMainImage(response.data.images[0]);
         }
-      } catch (error) {
-        console.error("Failed to fetch room details:", error);
+      } catch (err) {
+        console.error("Failed to fetch room details:", err);
+        setError("Failed to load room details. The listing may not exist or the server may be waking up.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchRoomDetails();
@@ -87,9 +95,31 @@ function RoomDetails() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="py-40 flex flex-col items-center justify-center gap-3">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-500 text-sm">Loading room details...</p>
+      </div>
+    );
+  }
+
+  if (error || !room) {
+    return (
+      <div className="py-40 flex flex-col items-center justify-center gap-3 text-center px-4">
+        <p className="text-lg text-gray-700">{error || "Room not found"}</p>
+        <button
+          onClick={() => navigate("/rooms")}
+          className="mt-2 px-4 py-2 text-sm bg-black text-white rounded-full hover:bg-gray-800 transition"
+        >
+          Back to all rooms
+        </button>
+      </div>
+    );
+  }
+
   return (
-    room && (
-      <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32">
+    <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
           <h1 className="text-3xl md:text-4xl font-playfair">
             {room.hotel ? room.hotel.name : "Unassigned"} {" "}
@@ -261,9 +291,8 @@ function RoomDetails() {
           <button className="px-6 py-2.5 mt-4 rounded text-white bg-primary hover:bg-primary-dull transition-all cursor-pointer">
             Contact now
           </button>
-        </div>
       </div>
-    )
+    </div>
   );
 }
 

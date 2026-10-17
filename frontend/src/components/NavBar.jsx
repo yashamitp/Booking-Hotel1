@@ -178,20 +178,28 @@ const Navbar = () => {
           </Link>
         ))}
 
-        {user && isAdmin ? (
+        {!user ? (
           <button
-            onClick={() => navigate("/owner")}
-            className="border px-4 py-2 rounded-full"
-          >
-            Dashboard
-          </button>
-        ) : (
-          <button
-            onClick={() => openSignIn()}
+            onClick={() => {
+              setIsMenuOpen(false);
+              openSignIn();
+            }}
             className="bg-black text-white px-8 py-2.5 rounded-full"
           >
             Login
           </button>
+        ) : (
+          isAdmin && (
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                navigate("/owner");
+              }}
+              className="border px-4 py-2 rounded-full"
+            >
+              Dashboard
+            </button>
+          )
         )}
       </div>
     </nav>

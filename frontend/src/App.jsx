@@ -6,7 +6,6 @@ import Footer from "./components/Footer";
 import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
 import MyBooking from "./pages/MyBooking";
-import HotelReg from "./components/HotelReg";
 import Layout from "./pages/hotelOwner/Layout";
 import Dashboard from "./pages/hotelOwner/Dashboard";
 import AddRoom from "./pages/hotelOwner/AddRoom";
@@ -24,9 +23,6 @@ function App() {
     <div>
       {/* Show Navbar only on user side */}
       {!isOwnerPath && <NavBar />}
-
-      {/* Temporary condition (remove if not needed) */}
-      {false && <HotelReg />}
 
       <div className="min-h-[70vh]">
         <Routes>

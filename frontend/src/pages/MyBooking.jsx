@@ -5,21 +5,29 @@ import axiosClient from "../api/axiosClient";
 import { useUser } from "@clerk/clerk-react";
 
 function MyBooking() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!isLoaded) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     const fetchBookings = async () => {
+      setLoading(true);
       try {
         const response = await axiosClient.get(`/booking/api/user/${user.id}`);
-        setBookings(response.data);
+        setBookings(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Failed to fetch bookings:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchBookings();
-  }, [user]);
+  }, [user, isLoaded]);
 
   return (
     <div className="py-28 md:pb-32 px-4 md:px-16 lg:px-24 xl:px-32">
@@ -36,7 +44,9 @@ function MyBooking() {
           <div className="w-1/3">Date & Timings</div>
           <div className="w-1/3">Payment</div>
         </div>
-        {bookings.length === 0 ? (
+        {loading ? (
+          <p className="text-gray-500 mt-8">Loading bookings...</p>
+        ) : bookings.length === 0 ? (
           <p className="text-gray-500 mt-8">No bookings found.</p>
         ) : (
           bookings.map((booking) => (

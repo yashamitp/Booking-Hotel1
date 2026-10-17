@@ -10,7 +10,7 @@ function ListHotel() {
   const fetchHotels = async () => {
     try {
       const response = await axiosClient.get("/hotels/api");
-      setHotels(response.data);
+      setHotels(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching hotels:", error);
     }

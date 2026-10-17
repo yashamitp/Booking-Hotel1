@@ -20,7 +20,7 @@ function AddRoom() {
     const fetchHotels = async () => {
       try {
         const response = await axiosClient.get("/hotels/api");
-        setHotels(response.data);
+        setHotels(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Failed to fetch hotels", error);
       }

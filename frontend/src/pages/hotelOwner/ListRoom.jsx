@@ -10,7 +10,7 @@ function ListRoom() {
       try {
         // Fetch all rooms (could be modified to fetch only logged-in owner's rooms based on logic)
         const response = await axiosClient.get("/rooms/api");
-        setRooms(response.data);
+        setRooms(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Error fetching rooms:", error);
       }

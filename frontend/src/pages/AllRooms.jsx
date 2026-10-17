@@ -54,6 +54,8 @@ function AllRooms() {
   const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
   const [sortBy, setSortBy] = useState("");
   const [roomsData, setRoomsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const roomtypes = ["Single Bed", "Double Bed", "Luxury room", "Family Suite"];
 
@@ -72,15 +74,21 @@ function AllRooms() {
     "newest first",
   ];
 
+  const fetchRooms = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosClient.get("/rooms/api");
+      setRoomsData(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error("Error fetching rooms:", err);
+      setError("Unable to load rooms. The server may be waking up, please retry.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const response = await axiosClient.get("/rooms/api");
-        setRoomsData(response.data);
-      } catch (error) {
-        console.error("Error fetching rooms:", error);
-      }
-    };
     fetchRooms();
   }, []);
 
@@ -184,7 +192,22 @@ function AllRooms() {
           </div>
         )}
 
-        {filteredRooms.length === 0 ? (
+        {loading ? (
+          <div className="mt-16 flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-500 text-sm">Loading available rooms...</p>
+          </div>
+        ) : error ? (
+          <div className="mt-16 text-center text-gray-500">
+            <p className="text-base text-gray-700">{error}</p>
+            <button
+              onClick={fetchRooms}
+              className="mt-3 px-4 py-1.5 text-xs font-medium text-blue-600 border border-blue-300 rounded hover:bg-blue-50 transition"
+            >
+              Retry
+            </button>
+          </div>
+        ) : filteredRooms.length === 0 ? (
           <div className="mt-12 text-center text-gray-500">
             <p className="text-lg">No rooms found{cityFromUrl ? ` in "${cityFromUrl}"` : ""}.</p>
             {cityFromUrl && (

@@ -11,10 +11,10 @@ function Dashboard() {
     const fetchBookings = async () => {
       try {
         const response = await axiosClient.get("/booking/api");
-        const allBookings = response.data;
+        const allBookings = Array.isArray(response.data) ? response.data : [];
 
         const totalRev = allBookings.reduce(
-          (sum, current) => sum + current.totalPrice,
+          (sum, current) => sum + (Number(current.totalPrice) || 0),
           0
         );
 
@@ -23,7 +23,7 @@ function Dashboard() {
           totalRevenue: totalRev,
         });
 
-        setBookings(allBookings.reverse().slice(0, 10));
+        setBookings([...allBookings].reverse().slice(0, 10));
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       }

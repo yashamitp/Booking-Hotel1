@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { assets } from "../../assets/assets";
 
@@ -6,6 +6,7 @@ function Sidebar() {
   const sidebarLinks = [
     { name: "Dashboard", path: "/owner", icon: assets.dashboardIcon },
     { name: "Add Hotel", path: "/owner/add-hotel", icon: assets.addIcon },
+    { name: "List Hotel", path: "/owner/list-hotel", icon: assets.listIcon },
     { name: "Add Room", path: "/owner/add-room", icon: assets.addIcon },
     { name: "List Room", path: "/owner/list-room", icon: assets.listIcon },
   ];
