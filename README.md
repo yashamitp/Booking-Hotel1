@@ -9,7 +9,7 @@ This project is built using the **MERN stack** with modern tools for authenticat
 
 ## 🌐 Live Demo
 
-https://booking-hotel1-9snz.vercel.app/
+https://quickstay-ebon.vercel.app/
 
 ## ✨ Features
 
