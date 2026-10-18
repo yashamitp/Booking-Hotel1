@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
 import MyBooking from "./pages/MyBooking";
+import Wishlist from "./pages/Wishlist";
 import Layout from "./pages/hotelOwner/Layout";
 import Dashboard from "./pages/hotelOwner/Dashboard";
 import AddRoom from "./pages/hotelOwner/AddRoom";
@@ -31,6 +32,7 @@ function App() {
           <Route path="/rooms" element={<AllRooms />} />
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/my-bookings" element={<MyBooking />} />
+          <Route path="/wishlist" element={<Wishlist />} />
 
           {/* Owner Routes (Nested Routing) */}
           <Route path="/owner" element={<Layout />}>

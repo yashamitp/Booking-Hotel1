@@ -20,6 +20,16 @@ const BookIcon = () => (
     />
   </svg>
 );
+const HeartNavIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+  </svg>
+);
+
 const UserMenu = ({ navigate }) => (
   <UserButton>
     <UserButton.MenuItems>
@@ -28,16 +38,22 @@ const UserMenu = ({ navigate }) => (
         labelIcon={BookIcon}
         onClick={() => navigate("/my-bookings")}
       />
+      <UserButton.Action
+        label="Wishlist"
+        labelIcon={HeartNavIcon}
+        onClick={() => navigate("/wishlist")}
+      />
     </UserButton.MenuItems>
   </UserButton>
 );
 
 const Navbar = () => {
+  const { isAdmin, wishlistCount } = useAppContext();
+
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Hotels", path: "/rooms" },
-    // { name: "Experience", path: "/experience" },
-    // { name: "About", path: "/about" },
+    { name: "Wishlist", path: "/wishlist", badge: wishlistCount },
   ];
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -45,7 +61,6 @@ const Navbar = () => {
 
   const { openSignIn } = useClerk();
   const { user } = useUser();
-  const { isAdmin } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -87,16 +102,22 @@ const Navbar = () => {
             const active = location.pathname === link.path;
 
             return (
-              <Link key={link.name} to={link.path} className="group relative">
+              <Link key={link.name} to={link.path} className="group relative flex items-center gap-1.5">
                 <span
                   className={`transition ${
                     active
-                      ? "font-medium"
+                      ? "font-semibold"
                       : "opacity-80 group-hover:opacity-100"
                   }`}
                 >
                   {link.name}
                 </span>
+
+                {typeof link.badge === "number" && link.badge > 0 && (
+                  <span className="text-[10px] font-bold bg-red-500 text-white rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                    {link.badge}
+                  </span>
+                )}
 
                 <span
                   className={`absolute left-0 -bottom-1 h-0.5 transition-all duration-300 ${
@@ -112,7 +133,7 @@ const Navbar = () => {
           {isAdmin && (
             <button
               onClick={() => navigate("/owner")}
-              className="border px-4 py-1.5 rounded-full text-sm hover:bg-black hover:text-white transition"
+              className="border px-4 py-1.5 rounded-full text-sm hover:bg-black hover:text-white transition cursor-pointer"
             >
               Dashboard
             </button>
@@ -121,13 +142,44 @@ const Navbar = () => {
 
         {/* DESKTOP RIGHT */}
         <div className="hidden md:flex items-center gap-4">
-          <img
-            src={assets.searchIcon}
-            alt="search"
-            className={`h-6 cursor-pointer transition ${
-              isScrolled && "invert"
-            }`}
-          />
+          <button
+            onClick={() => navigate("/rooms")}
+            aria-label="Search Hotels"
+            className="p-1 cursor-pointer"
+          >
+            <img
+              src={assets.searchIcon}
+              alt="search"
+              className={`h-5 w-5 transition ${isScrolled && "invert"}`}
+            />
+          </button>
+
+          <Link
+            to="/wishlist"
+            aria-label="Wishlist"
+            className="relative p-1 cursor-pointer"
+          >
+            <svg
+              className={`w-5 h-5 transition ${
+                isScrolled ? "text-gray-800" : "text-white"
+              } hover:text-red-500`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+              />
+            </svg>
+            {wishlistCount > 0 && (
+              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-red-500 text-white rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                {wishlistCount}
+              </span>
+            )}
+          </Link>
 
           {user ? (
             <UserMenu navigate={navigate} />
