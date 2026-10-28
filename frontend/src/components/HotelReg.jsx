@@ -97,9 +97,13 @@ function HotelReg() {
 
       await axiosClient.post("/hotels/api", payload);
 
-      // Re-check hotel permissions so dashboard updates immediately
-      if (checkHotelPermission) {
-        await checkHotelPermission();
+      // Re-check hotel permissions so dashboard updates if immediately approved
+      try {
+        if (checkHotelPermission) {
+          await checkHotelPermission();
+        }
+      } catch (checkErr) {
+        console.warn("Permission refresh warning:", checkErr);
       }
 
       setSuccess(true);
@@ -119,10 +123,11 @@ function HotelReg() {
       }, 2500);
     } catch (err) {
       console.error("Failed to register hotel:", err);
-      setErrorMsg(
+      const serverMessage =
         err.response?.data?.message ||
-          "Failed to submit hotel registration. Please try again."
-      );
+        err.message ||
+        "Failed to submit hotel registration. Please try again.";
+      setErrorMsg(serverMessage);
     } finally {
       setSubmitting(false);
     }
@@ -181,7 +186,7 @@ function HotelReg() {
             List Your Property
           </h2>
           <p className="text-xs text-gray-500 mt-0.5 mb-5">
-            Provide your property details. Once approved by admin (yashprajapati.9769@gmail.com), your owner dashboard will be activated.
+            Provide your property details. Once approved by the platform admin, your owner dashboard will be activated.
           </p>
 
           {success ? (
@@ -195,7 +200,7 @@ function HotelReg() {
               <p className="text-xs text-gray-600 max-w-sm mt-2 leading-relaxed">
                 {isAdmin
                   ? "Your property has been approved and is now active across QuickStay."
-                  : "Your registration is awaiting approval by Yash Prajapati (yashprajapati.9769@gmail.com). Once approved, your owner dashboard will appear in the navigation bar!"}
+                  : "Your registration is awaiting admin review and approval. Once approved, your owner dashboard will appear in the navigation bar!"}
               </p>
             </div>
           ) : (
