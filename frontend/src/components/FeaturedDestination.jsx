@@ -97,11 +97,11 @@ function FeaturedDestination() {
       <button
         onClick={() => {
           navigate("/rooms");
-          scrollTo(0, 0);
+          window.scrollTo(0, 0);
         }}
         className="mt-14 px-7 py-3 text-sm font-semibold border-2 border-gray-900 rounded-full bg-transparent hover:bg-gray-900 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
       >
-        Explore All {rooms.length} Stays →
+        {rooms.length > 0 ? `Explore All ${rooms.length} Stays →` : "Explore All Stays →"}
       </button>
     </div>
   );

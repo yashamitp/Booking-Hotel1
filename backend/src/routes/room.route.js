@@ -8,7 +8,12 @@ const { requireClerkAuth } = require("../middleware/requireAuth");
 router.get("/", async (req, res) => {
   try {
     const rooms = await roomModel.find().populate("hotel");
-    res.json(rooms);
+    // Only return rooms whose hotel is approved (or legacy hotels without status)
+    const activeRooms = rooms.filter((r) => {
+      if (!r.hotel) return true;
+      return !r.hotel.status || r.hotel.status === "approved";
+    });
+    res.json(activeRooms);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

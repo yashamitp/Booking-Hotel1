@@ -1,27 +1,71 @@
 const bookingModel = require("../models/bookingModel");
 const roomModel = require("../models/roomModel");
+const hotelModel = require("../models/hotelModel");
 const express = require("express");
 const router = express.Router();
 const { requireClerkAuth } = require("../middleware/requireAuth");
 
-// GET all bookings — admin only (protected)
+const ADMIN_EMAIL = "yashprajapati.9769@gmail.com";
+
+const isAdminUser = (auth) => {
+  if (!auth) return false;
+  const email =
+    auth.sessionClaims?.email ||
+    auth.sessionClaims?.["email_address"] ||
+    "";
+  const role = auth.sessionClaims?.publicMetadata?.role;
+  return role === "admin" || email === ADMIN_EMAIL;
+};
+
+// GET all bookings — admin only
 router.get("/", requireClerkAuth, async (req, res) => {
   try {
+    if (!isAdminUser(req.auth)) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
     const bookings = await bookingModel
       .find()
       .populate("hotel")
-      .populate("room");
+      .populate("room")
+      .sort({ createdAt: -1 });
     res.json(bookings);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
+// GET bookings for hotels owned by a specific owner
+router.get("/owner/:ownerId", requireClerkAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!isAdminUser(req.auth) && userId !== req.params.ownerId) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    // Find all hotels owned by this owner
+    const ownerHotels = await hotelModel.find({ ownerId: req.params.ownerId }).select("_id");
+    const hotelIds = ownerHotels.map((h) => h._id);
+
+    const bookings = await bookingModel
+      .find({ hotel: { $in: hotelIds } })
+      .populate("hotel")
+      .populate("room")
+      .sort({ createdAt: -1 });
+
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// GET bookings for a specific end user (guest)
 router.get("/user/:userId", async (req, res) => {
   try {
     const bookings = await bookingModel
       .find({ userId: req.params.userId })
       .populate("hotel")
-      .populate("room");
+      .populate("room")
+      .sort({ createdAt: -1 });
     res.json(bookings);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -42,7 +86,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create a booking — also decrements availableRooms on the room (protected)
+// Create a booking — decrements availableRooms on the room (protected)
 router.post("/", requireClerkAuth, async (req, res) => {
   try {
     const { room: roomId } = req.body;

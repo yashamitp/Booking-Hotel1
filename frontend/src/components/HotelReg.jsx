@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { assets, cities } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 import axiosClient from "../api/axiosClient";
+import { useClerk } from "@clerk/clerk-react";
 
 function HotelReg() {
-  const { isHotelRegOpen, closeHotelReg, user } = useAppContext();
+  const { isHotelRegOpen, closeHotelReg, user, isAdmin, userEmail } = useAppContext();
+  const { openSignIn } = useClerk();
 
   const [hotelName, setHotelName] = useState("");
   const [contact, setContact] = useState("");
@@ -17,6 +19,25 @@ function HotelReg() {
 
   if (!isHotelRegOpen) return null;
 
+  if (!user) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="relative flex flex-col items-center justify-center text-center bg-white rounded-3xl shadow-2xl p-10 max-w-sm w-full">
+          <button onClick={closeHotelReg} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition cursor-pointer">✕</button>
+          <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl mb-4">🏨</div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Sign In Required</h2>
+          <p className="text-sm text-gray-500 mb-6">Please sign in to list your property on QuickStay.</p>
+          <button
+            onClick={() => { closeHotelReg(); openSignIn(); }}
+            className="w-full bg-gray-900 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition text-sm cursor-pointer"
+          >
+            Sign In to Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -27,12 +48,13 @@ function HotelReg() {
         imageUrl.trim() ||
         "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1200&auto=format&fit=crop";
 
-      await axiosClient.post("/hotel/api", {
+      await axiosClient.post("/hotels/api", {
         name: hotelName.trim(),
         contact: contact.trim(),
         address: address.trim(),
         city: city.trim(),
         ownerId: user?.id || "partner",
+        ownerEmail: userEmail || user?.primaryEmailAddress?.emailAddress || "",
         images: [defaultImg],
       });
 
@@ -119,7 +141,9 @@ function HotelReg() {
               </div>
               <h3 className="text-xl font-bold text-gray-900">Hotel Registered!</h3>
               <p className="text-xs text-gray-500 mt-1">
-                Your property has been successfully added to our network.
+                {isAdmin
+                  ? "Your property has been approved and is now live on QuickStay!"
+                  : "Registration submitted! Our team will review your property within 24 hours and notify you via email."}
               </p>
             </div>
           ) : (

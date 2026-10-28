@@ -67,6 +67,7 @@ app.get("/health", (req, res) => {
 
 // API Routes
 app.use("/hotels/api", hotelRoutes);
+app.use("/hotel/api", hotelRoutes);
 app.use("/rooms/api", roomRoutes);
 app.use("/booking/api", bookingRoutes);
 app.use("/upload/api", uploadRoutes);

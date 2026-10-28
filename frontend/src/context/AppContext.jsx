@@ -14,7 +14,12 @@ const AppContext = createContext(null);
 
 export const AppProvider = ({ children }) => {
   const { user, isLoaded } = useUser();
-  const isAdmin = isLoaded && user?.publicMetadata?.role === "admin";
+  const ADMIN_EMAIL = "yashprajapati.9769@gmail.com";
+  const userEmail = user?.primaryEmailAddress?.emailAddress || "";
+  const isAdmin = isLoaded && (
+    user?.publicMetadata?.role === "admin" ||
+    userEmail === ADMIN_EMAIL
+  );
 
   // ── Wishlist State ──────────────────────────────────────────────────────────
   const [wishlist, setWishlist] = useState(() => {
@@ -149,6 +154,7 @@ export const AppProvider = ({ children }) => {
         isAdmin,
         isLoaded,
         user,
+        userEmail,
         // Wishlist
         wishlist,
         toggleWishlist,

@@ -56,6 +56,8 @@ const Navbar = () => {
     openHotelReg,
     compareList,
     setIsCompareModalOpen,
+    user,
+    userEmail,
   } = useAppContext();
 
   const navLinks = [
@@ -68,7 +70,6 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const { openSignIn } = useClerk();
-  const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -146,13 +147,17 @@ const Navbar = () => {
             + List Property
           </button>
 
-          {/* Owner Dashboard link */}
-          {isAdmin && (
+          {/* Dashboard button � admin or logged-in user */}
+          {user && (
             <button
               onClick={() => navigate("/owner")}
-              className="border border-black px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-black hover:text-white transition cursor-pointer"
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer shadow-sm ${
+                isAdmin
+                  ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                  : "bg-gray-900 text-white hover:bg-gray-700"
+              }`}
             >
-              Dashboard
+              {isAdmin ? "Admin Panel" : "My Dashboard"}
             </button>
           )}
         </div>
@@ -316,17 +321,17 @@ const Navbar = () => {
             Sign In
           </button>
         ) : (
-          isAdmin && (
-            <button
-              onClick={() => {
-                setIsMenuOpen(false);
-                navigate("/owner");
-              }}
-              className="border px-5 py-2 rounded-full text-sm font-medium"
-            >
-              Dashboard
-            </button>
-          )
+          <button
+            onClick={() => {
+              setIsMenuOpen(false);
+              navigate("/owner");
+            }}
+            className={`px-5 py-2 rounded-full text-sm font-bold ${
+              isAdmin ? "bg-indigo-600 text-white" : "bg-gray-900 text-white"
+            }`}
+          >
+            {isAdmin ? "Admin Panel" : "My Dashboard"}
+          </button>
         )}
       </div>
     </nav>
