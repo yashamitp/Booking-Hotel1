@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
+import axiosClient from "../api/axiosClient";
 
 export const CURRENCIES = {
   INR: { code: "INR", symbol: "₹", rate: 1, label: "INR (₹)" },
@@ -16,10 +17,49 @@ export const AppProvider = ({ children }) => {
   const { user, isLoaded } = useUser();
   const ADMIN_EMAIL = "yashprajapati.9769@gmail.com";
   const userEmail = user?.primaryEmailAddress?.emailAddress || "";
-  const isAdmin = isLoaded && (
-    user?.publicMetadata?.role === "admin" ||
-    userEmail === ADMIN_EMAIL
-  );
+  const isAdmin =
+    isLoaded &&
+    (user?.publicMetadata?.role === "admin" || userEmail === ADMIN_EMAIL);
+
+  // ── Hotel Owner Permission State ───────────────────────────────────────────
+  // Dashboard only appears after getting permission of posting hotels (admin approval)
+  const [hasHotelPermission, setHasHotelPermission] = useState(false);
+  const [userHotels, setUserHotels] = useState([]);
+  const [checkingPermission, setCheckingPermission] = useState(true);
+
+  const checkHotelPermission = async () => {
+    if (!user) {
+      setHasHotelPermission(false);
+      setUserHotels([]);
+      setCheckingPermission(false);
+      return;
+    }
+    if (isAdmin) {
+      setHasHotelPermission(true);
+      setCheckingPermission(false);
+      return;
+    }
+    try {
+      setCheckingPermission(true);
+      const res = await axiosClient.get(`/hotels/api/owner/${user.id}`);
+      const hotels = Array.isArray(res.data) ? res.data : [];
+      setUserHotels(hotels);
+      // User has permission if they have at least one hotel approved by admin
+      const hasApproved = hotels.some((h) => h.status === "approved");
+      setHasHotelPermission(hasApproved);
+    } catch (e) {
+      console.error("Error checking hotel permission:", e);
+      setHasHotelPermission(false);
+    } finally {
+      setCheckingPermission(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoaded) {
+      checkHotelPermission();
+    }
+  }, [user?.id, isAdmin, isLoaded]);
 
   // ── Wishlist State ──────────────────────────────────────────────────────────
   const [wishlist, setWishlist] = useState(() => {
@@ -155,6 +195,11 @@ export const AppProvider = ({ children }) => {
         isLoaded,
         user,
         userEmail,
+        // Hotel posting permission
+        hasHotelPermission,
+        checkHotelPermission,
+        userHotels,
+        checkingPermission,
         // Wishlist
         wishlist,
         toggleWishlist,

@@ -69,6 +69,7 @@ function AddHotel() {
         ...hotelData,
         images: uploadedUrls,
         ownerId: user?.id || "admin",
+        ownerEmail: user?.primaryEmailAddress?.emailAddress || "",
       });
       alert("Hotel Added Successfully");
       navigate("/owner/list-hotel");

@@ -3,24 +3,17 @@ const roomModel = require("../models/roomModel");
 const hotelModel = require("../models/hotelModel");
 const express = require("express");
 const router = express.Router();
-const { requireClerkAuth } = require("../middleware/requireAuth");
-
-const ADMIN_EMAIL = "yashprajapati.9769@gmail.com";
-
-const isAdminUser = (auth) => {
-  if (!auth) return false;
-  const email =
-    auth.sessionClaims?.email ||
-    auth.sessionClaims?.["email_address"] ||
-    "";
-  const role = auth.sessionClaims?.publicMetadata?.role;
-  return role === "admin" || email === ADMIN_EMAIL;
-};
+const {
+  requireClerkAuth,
+  isAdminUser,
+  getRequestAuth,
+  ADMIN_EMAIL,
+} = require("../middleware/requireAuth");
 
 // GET all bookings — admin only
 router.get("/", requireClerkAuth, async (req, res) => {
   try {
-    if (!isAdminUser(req.auth)) {
+    if (!isAdminUser(req)) {
       return res.status(403).json({ message: "Admin access required" });
     }
     const bookings = await bookingModel
@@ -37,8 +30,9 @@ router.get("/", requireClerkAuth, async (req, res) => {
 // GET bookings for hotels owned by a specific owner
 router.get("/owner/:ownerId", requireClerkAuth, async (req, res) => {
   try {
-    const userId = req.auth?.userId;
-    if (!isAdminUser(req.auth) && userId !== req.params.ownerId) {
+    const auth = getRequestAuth(req);
+    const userId = auth?.userId;
+    if (!isAdminUser(req) && userId !== req.params.ownerId) {
       return res.status(403).json({ message: "Not authorized" });
     }
 

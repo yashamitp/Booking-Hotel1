@@ -50,6 +50,7 @@ const UserMenu = ({ navigate }) => (
 const Navbar = () => {
   const {
     isAdmin,
+    hasHotelPermission,
     wishlistCount,
     currencyCode,
     changeCurrency,
@@ -57,7 +58,6 @@ const Navbar = () => {
     compareList,
     setIsCompareModalOpen,
     user,
-    userEmail,
   } = useAppContext();
 
   const navLinks = [
@@ -147,8 +147,8 @@ const Navbar = () => {
             + List Property
           </button>
 
-          {/* Dashboard button � admin or logged-in user */}
-          {user && (
+          {/* Dashboard button — only visible to admin or approved hotel owners */}
+          {(isAdmin || hasHotelPermission) && (
             <button
               onClick={() => navigate("/owner")}
               className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer shadow-sm ${
@@ -320,7 +320,7 @@ const Navbar = () => {
           >
             Sign In
           </button>
-        ) : (
+        ) : (isAdmin || hasHotelPermission) ? (
           <button
             onClick={() => {
               setIsMenuOpen(false);
@@ -332,7 +332,7 @@ const Navbar = () => {
           >
             {isAdmin ? "Admin Panel" : "My Dashboard"}
           </button>
-        )}
+        ) : null}
       </div>
     </nav>
   );

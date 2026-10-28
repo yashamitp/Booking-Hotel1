@@ -64,11 +64,16 @@ function Dashboard() {
   const handleHotelStatusChange = async (hotelId, newStatus) => {
     try {
       await axiosClient.patch(`/hotels/api/${hotelId}/status`, { status: newStatus });
-      setHotels((prev) => prev.map((h) => h._id === hotelId ? { ...h, status: newStatus } : h));
-      setStats((prev) => ({
-        ...prev,
-        pendingHotels: hotels.filter((h) => h._id !== hotelId && h.status === "pending").length,
-      }));
+      setHotels((prev) => {
+        const updated = prev.map((h) =>
+          h._id === hotelId ? { ...h, status: newStatus } : h
+        );
+        setStats((s) => ({
+          ...s,
+          pendingHotels: updated.filter((h) => h.status === "pending").length,
+        }));
+        return updated;
+      });
     } catch (error) {
       console.error("Failed to update hotel status:", error);
       alert("Could not update hotel status.");

@@ -7,19 +7,30 @@ const axiosClient = axios.create({
   baseURL,
 });
 
-// Attach Clerk session token to every request automatically.
-// window.Clerk is available globally once ClerkProvider has loaded.
+// Attach Clerk session token and user headers to requests automatically
 axiosClient.interceptors.request.use(async (config) => {
+  config.headers = config.headers || {};
+
   try {
     const token = await window.Clerk?.session?.getToken();
     if (token) {
-      config.headers = config.headers || {};
       config.headers["Authorization"] = `Bearer ${token}`;
     }
   } catch {
-    // Not logged in — unauthenticated requests will be rejected by backend
-    // on protected routes and succeed on public routes.
+    // Continue
   }
+
+  try {
+    const user = window.Clerk?.user;
+    if (user?.id) {
+      config.headers["x-user-id"] = user.id;
+      config.headers["x-user-email"] =
+        user.primaryEmailAddress?.emailAddress || "";
+    }
+  } catch {
+    // Continue
+  }
+
   return config;
 });
 
@@ -43,4 +54,3 @@ axiosClient.interceptors.response.use(
 );
 
 export default axiosClient;
-

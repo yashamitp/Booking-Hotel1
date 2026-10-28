@@ -1,22 +1,12 @@
 const hotelModel = require("../models/hotelModel");
 const express = require("express");
 const router = express.Router();
-const { requireClerkAuth } = require("../middleware/requireAuth");
-
-const ADMIN_EMAIL = "yashprajapati.9769@gmail.com";
-
-// Helper: check if the auth'd user is the platform admin
-const isAdminUser = (auth) => {
-  if (!auth) return false;
-  // Clerk stores email claims in different places depending on version
-  const email =
-    auth.sessionClaims?.email ||
-    auth.sessionClaims?.["email_address"] ||
-    auth.sessionClaims?.primary_email_address_id ||
-    "";
-  const role = auth.sessionClaims?.publicMetadata?.role;
-  return role === "admin" || email === ADMIN_EMAIL;
-};
+const {
+  requireClerkAuth,
+  isAdminUser,
+  getRequestAuth,
+  ADMIN_EMAIL,
+} = require("../middleware/requireAuth");
 
 // ── Public Routes ──────────────────────────────────────────────────────────────
 
@@ -36,7 +26,7 @@ router.get("/", async (req, res) => {
 // GET all hotels for admin (all statuses) — used by owner dashboard
 router.get("/admin/all", requireClerkAuth, async (req, res) => {
   try {
-    if (!isAdminUser(req.auth)) {
+    if (!isAdminUser(req)) {
       return res.status(403).json({ message: "Admin access required" });
     }
     const hotels = await hotelModel.find().sort({ createdAt: -1 });
@@ -47,8 +37,8 @@ router.get("/admin/all", requireClerkAuth, async (req, res) => {
   }
 });
 
-// GET hotels for a specific owner
-router.get("/owner/:ownerId", requireClerkAuth, async (req, res) => {
+// GET hotels for a specific owner (to check permission and load owner dashboard)
+router.get("/owner/:ownerId", async (req, res) => {
   try {
     const hotels = await hotelModel
       .find({ ownerId: req.params.ownerId })
@@ -76,13 +66,14 @@ router.get("/:id", async (req, res) => {
 // POST: Register a hotel — requires login; starts as "pending" for approval
 router.post("/", requireClerkAuth, async (req, res) => {
   try {
-    const userId = req.auth?.userId;
+    const auth = getRequestAuth(req);
+    const userId = auth?.userId || req.body?.ownerId;
     if (!userId) {
       return res.status(401).json({ message: "Please log in to register a hotel." });
     }
 
-    // Admin-submitted hotels get approved immediately
-    const adminSubmit = isAdminUser(req.auth);
+    // Admin-submitted hotels get approved immediately; partner registrations start pending
+    const adminSubmit = isAdminUser(req);
 
     const hotel = await hotelModel.create({
       ...req.body,
@@ -99,7 +90,7 @@ router.post("/", requireClerkAuth, async (req, res) => {
 // PATCH: Approve or reject a hotel (admin only)
 router.patch("/:id/status", requireClerkAuth, async (req, res) => {
   try {
-    if (!isAdminUser(req.auth)) {
+    if (!isAdminUser(req)) {
       return res.status(403).json({ message: "Admin access required" });
     }
     const { status, rejectionReason } = req.body;
@@ -125,8 +116,9 @@ router.delete("/:id", requireClerkAuth, async (req, res) => {
     if (!hotel) return res.status(404).json({ message: "Hotel not found" });
 
     // Only admin or the hotel's owner can delete
-    const userId = req.auth?.userId;
-    if (!isAdminUser(req.auth) && hotel.ownerId !== userId) {
+    const auth = getRequestAuth(req);
+    const userId = auth?.userId;
+    if (!isAdminUser(req) && hotel.ownerId !== userId) {
       return res.status(403).json({ message: "Not authorised to delete this hotel." });
     }
 

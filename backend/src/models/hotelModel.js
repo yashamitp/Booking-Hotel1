@@ -16,6 +16,10 @@ const hotelSchema = new mongoose.Schema(
       default: "approved", // seeded/admin hotels start approved
     },
     rejectionReason: { type: String, default: "" },
+    description: { type: String, default: "" },
+    propertyType: { type: String, default: "Hotel" },
+    pricePerNight: { type: Number, default: 0 },
+    amenities: [{ type: String }],
   },
   { timestamps: true }
 );
