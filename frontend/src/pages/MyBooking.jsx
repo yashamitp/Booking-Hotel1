@@ -4,16 +4,19 @@ import { assets } from "../assets/assets";
 import axiosClient from "../api/axiosClient";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../context/AppContext";
 
 function MyBooking() {
   const { user, isLoaded } = useUser();
   const navigate = useNavigate();
+  const { formatPrice } = useAppContext();
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [copiedVoucher, setCopiedVoucher] = useState(false);
 
   const fetchBookings = async () => {
     if (!user) return;
@@ -62,12 +65,12 @@ function MyBooking() {
   const filteredBookings = useMemo(() => {
     if (activeFilter === "all") return bookings;
     return bookings.filter(
-      (b) => (b.status || "pending").toLowerCase() === activeFilter
+      (b) => (b.status || "confirmed").toLowerCase() === activeFilter
     );
   }, [bookings, activeFilter]);
 
   const getStatusBadge = (status) => {
-    const s = (status || "pending").toLowerCase();
+    const s = (status || "confirmed").toLowerCase();
     if (s === "confirmed") {
       return (
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -92,12 +95,20 @@ function MyBooking() {
     );
   };
 
+  const handleCopyVoucher = () => {
+    if (!selectedReceipt) return;
+    const details = `QuickStay Booking Voucher\nProperty: ${selectedReceipt.hotel?.name}\nDates: ${new Date(selectedReceipt.checkInDate).toLocaleDateString()} to ${new Date(selectedReceipt.checkOutDate).toLocaleDateString()}\nRef: #${selectedReceipt._id}\nTotal: ₹${selectedReceipt.totalPrice}`;
+    navigator.clipboard.writeText(details);
+    setCopiedVoucher(true);
+    setTimeout(() => setCopiedVoucher(false), 2500);
+  };
+
   return (
     <div className="py-28 md:py-32 px-4 md:px-12 lg:px-20 max-w-6xl mx-auto min-h-[75vh]">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <Title
           title="My Reservations"
-          subTitle="View your upcoming getaways, view receipts, or manage your bookings."
+          subTitle="View your upcoming getaways, view official vouchers, or manage your bookings."
           align="left"
         />
 
@@ -141,7 +152,7 @@ function MyBooking() {
             </svg>
           </div>
           <p className="text-lg font-bold text-gray-800">No bookings found</p>
-          <p className="text-gray-500 text-sm mt-1 mb-6">
+          <p className="text-gray-500 text-xs sm:text-sm mt-1 mb-6">
             You don't have any {activeFilter !== "all" ? activeFilter : ""} reservations yet.
           </p>
           <button
@@ -166,14 +177,14 @@ function MyBooking() {
             return (
               <div
                 key={booking._id}
-                className="flex flex-col md:flex-row items-stretch md:items-center justify-between bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition gap-6"
+                className="flex flex-col md:flex-row items-stretch md:items-center justify-between bg-white border border-gray-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition gap-6"
               >
                 {/* Hotel & Room Info */}
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <img
                     src={firstImg}
                     alt=""
-                    className="w-24 h-24 md:w-32 md:h-28 rounded-xl object-cover shrink-0 bg-gray-100"
+                    className="w-24 h-24 md:w-32 md:h-28 rounded-2xl object-cover shrink-0 bg-gray-100"
                   />
                   <div className="min-w-0">
                     <span className="text-[11px] font-mono text-gray-400 block uppercase">
@@ -189,6 +200,14 @@ function MyBooking() {
                       <img src={assets.locationIcon} alt="" className="w-3 h-3 opacity-70 shrink-0" />
                       <span className="truncate">{booking.hotel?.address}</span>
                     </p>
+
+                    {booking.addOns && booking.addOns.length > 0 && (
+                      <div className="flex items-center gap-1 mt-1.5 overflow-hidden">
+                        <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md truncate">
+                          + {booking.addOns.length} add-on service(s)
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -209,7 +228,7 @@ function MyBooking() {
                   <div className="col-span-2">
                     <span className="text-gray-400 block font-medium">Total Paid</span>
                     <span className="font-bold text-base text-gray-900">
-                      ₹{Number(booking.totalPrice || 0).toLocaleString()}
+                      {formatPrice(booking.totalPrice)}
                     </span>
                   </div>
                 </div>
@@ -221,7 +240,7 @@ function MyBooking() {
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <button
                       onClick={() => setSelectedReceipt(booking)}
-                      className="px-3.5 py-1.5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+                      className="px-3.5 py-1.5 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-xl transition cursor-pointer"
                     >
                       Receipt
                     </button>
@@ -230,7 +249,7 @@ function MyBooking() {
                       <button
                         onClick={() => handleCancelBooking(booking._id)}
                         disabled={cancellingId === booking._id}
-                        className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg transition cursor-pointer disabled:opacity-50"
+                        className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
                       >
                         {cancellingId === booking._id ? "Cancelling..." : "Cancel"}
                       </button>
@@ -243,13 +262,13 @@ function MyBooking() {
         </div>
       )}
 
-      {/* ── Receipt Modal ── */}
+      {/* ── Receipt / Voucher Modal ── */}
       {selectedReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
             <button
               onClick={() => setSelectedReceipt(null)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg p-2"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg p-2 cursor-pointer"
             >
               ✕
             </button>
@@ -264,23 +283,17 @@ function MyBooking() {
               <p className="text-xs text-gray-500">{selectedReceipt.hotel?.address}</p>
             </div>
 
-            <div className="py-4 space-y-3 text-xs border-b border-gray-100">
+            <div className="py-4 space-y-2.5 text-xs border-b border-gray-100">
               <div className="flex justify-between">
                 <span className="text-gray-500">Booking Reference:</span>
-                <span className="font-mono font-bold text-gray-900">
-                  #{selectedReceipt._id?.slice(-8).toUpperCase()}
+                <span className="font-mono font-bold text-gray-900 uppercase">
+                  #{selectedReceipt._id?.slice(-8)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Guest Name:</span>
                 <span className="font-semibold text-gray-900">
                   {selectedReceipt.userName || "Valued Guest"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Guest Email:</span>
-                <span className="font-semibold text-gray-900">
-                  {selectedReceipt.email || "—"}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -299,11 +312,37 @@ function MyBooking() {
               <div className="flex justify-between">
                 <span className="text-gray-500">Total Guests:</span>
                 <span className="font-semibold text-gray-900">
-                  {selectedReceipt.guests}
+                  {selectedReceipt.guests} Guest(s)
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Booking Status:</span>
+
+              {selectedReceipt.addOns && selectedReceipt.addOns.length > 0 && (
+                <div className="pt-2 border-t border-gray-100">
+                  <span className="text-gray-500 block mb-1">Add-ons:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedReceipt.addOns.map((add, idx) => (
+                      <span
+                        key={idx}
+                        className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md"
+                      >
+                        ✓ {add}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedReceipt.specialRequests && (
+                <div className="pt-2 border-t border-gray-100">
+                  <span className="text-gray-500 block">Special Requests:</span>
+                  <p className="text-[11px] text-gray-700 italic mt-0.5">
+                    "{selectedReceipt.specialRequests}"
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-between pt-1">
+                <span className="text-gray-500">Status:</span>
                 <span className="font-bold uppercase text-emerald-600">
                   {selectedReceipt.status || "Confirmed"}
                 </span>
@@ -313,16 +352,42 @@ function MyBooking() {
             <div className="py-3 flex justify-between items-center text-sm font-bold text-gray-900">
               <span>Total Amount:</span>
               <span className="text-lg text-emerald-600">
-                ₹{Number(selectedReceipt.totalPrice).toLocaleString()}
+                {formatPrice(selectedReceipt.totalPrice)}
               </span>
             </div>
 
-            <button
-              onClick={() => window.print()}
-              className="w-full mt-4 py-3 bg-gray-900 hover:bg-blue-600 text-white font-semibold text-xs rounded-xl transition cursor-pointer"
-            >
-              Print / Save Receipt
-            </button>
+            <div className="flex items-center gap-2 mt-4">
+              <a
+                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+                  `Stay at ${selectedReceipt.hotel?.name}`
+                )}&dates=${new Date(selectedReceipt.checkInDate)
+                  .toISOString()
+                  .replace(/-|:|\.\d\d\d/g, "")}/${new Date(selectedReceipt.checkOutDate)
+                  .toISOString()
+                  .replace(/-|:|\.\d\d\d/g, "")}&details=${encodeURIComponent(
+                  `Booking Ref: #${selectedReceipt._id}\nRoom: ${selectedReceipt.room?.roomType}`
+                )}&location=${encodeURIComponent(selectedReceipt.hotel?.address || "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-xs rounded-xl transition text-center cursor-pointer"
+              >
+                📅 Add to Calendar
+              </a>
+
+              <button
+                onClick={handleCopyVoucher}
+                className="px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-xs rounded-xl transition cursor-pointer"
+              >
+                {copiedVoucher ? "✓ Copied" : "Copy"}
+              </button>
+
+              <button
+                onClick={() => window.print()}
+                className="flex-1 py-2.5 bg-gray-900 hover:bg-blue-600 text-white font-semibold text-xs rounded-xl transition cursor-pointer"
+              >
+                Print Voucher
+              </button>
+            </div>
           </div>
         </div>
       )}

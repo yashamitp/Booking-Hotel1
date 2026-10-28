@@ -7,6 +7,9 @@ import AllRooms from "./pages/AllRooms";
 import RoomDetails from "./pages/RoomDetails";
 import MyBooking from "./pages/MyBooking";
 import Wishlist from "./pages/Wishlist";
+import HotelReg from "./components/HotelReg";
+import CompareBar from "./components/CompareBar";
+import CompareModal from "./components/CompareModal";
 import Layout from "./pages/hotelOwner/Layout";
 import Dashboard from "./pages/hotelOwner/Dashboard";
 import AddRoom from "./pages/hotelOwner/AddRoom";
@@ -15,17 +18,16 @@ import AddHotel from "./pages/hotelOwner/AddHotel";
 import ListHotel from "./pages/hotelOwner/ListHotel";
 import { AppProvider } from "./context/AppContext";
 
-function App() {
+function AppContent() {
   const location = useLocation();
   const isOwnerPath = location.pathname.startsWith("/owner");
 
   return (
-    <AppProvider>
-    <div>
+    <div className="relative min-h-screen flex flex-col justify-between">
       {/* Show Navbar only on user side */}
       {!isOwnerPath && <NavBar />}
 
-      <div className="min-h-[70vh]">
+      <main className="flex-1">
         <Routes>
           {/* User Routes */}
           <Route path="/" element={<Home />} />
@@ -43,15 +45,31 @@ function App() {
             <Route path="list-hotel" element={<ListHotel />} />
           </Route>
         </Routes>
-      </div>
+      </main>
+
+      {/* Global Modals & Bars */}
+      {!isOwnerPath && (
+        <>
+          <HotelReg />
+          <CompareBar />
+          <CompareModal />
+        </>
+      )}
 
       {/* Hide Footer on Owner Panel */}
       {!isOwnerPath && (
-        <div className="mt-40">
+        <div className="mt-24">
           <Footer />
         </div>
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
     </AppProvider>
   );
 }

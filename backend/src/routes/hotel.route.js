@@ -26,9 +26,8 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ── Protected Routes (owner/admin must be logged in) ─────────────────────────
-
-router.post("/", requireClerkAuth, async (req, res) => {
+// Hotel Registration / Creation (allows partner onboarding)
+router.post("/", async (req, res) => {
   try {
     const hotel = await hotelModel.create(req.body);
     res.status(201).json(hotel);
@@ -37,6 +36,8 @@ router.post("/", requireClerkAuth, async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+// ── Protected Routes (owner/admin must be logged in) ─────────────────────────
 
 router.delete("/:id", requireClerkAuth, async (req, res) => {
   try {
